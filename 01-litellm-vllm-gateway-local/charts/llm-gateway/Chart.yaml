@@ -1,0 +1,6 @@
+apiVersion: v2
+name: llm-gateway
+description: LiteLLM gateway - routes to self-hosted vLLM, fails over to Azure OpenAI
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

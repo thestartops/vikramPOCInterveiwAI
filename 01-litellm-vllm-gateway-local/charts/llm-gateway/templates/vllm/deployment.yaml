@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "llm-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vllm
+spec:
+  replicas: {{ .Values.vllm.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: vllm
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "llm-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: vllm
+    spec:
+      containers:
+        - name: vllm
+          image: {{ .Values.vllm.image }}
+          args:
+            - --model
+            - {{ .Values.vllm.model }}
+            - --port
+            - {{ .Values.vllm.port | quote }}
+            - --dtype
+            - float32
+          ports:
+            - name: http
+              containerPort: {{ .Values.vllm.port }}
+          env:
+            # writable HF cache dir, independent of whatever user the image runs as
+            - name: HF_HOME
+              value: /data/hf-cache
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            # deliberately NOT runAsNonRoot: this image assumes root for its own
+            # cache/dependency writes; forcing non-root here would just add a
+            # second, unrelated failure mode on top of the CPU-vs-GPU question
+            # we're already testing.
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /data/hf-cache
+          resources:
+            requests:
+              cpu: {{ .Values.vllm.resources.requests.cpu }}
+              memory: {{ .Values.vllm.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.vllm.resources.limits.cpu }}
+              memory: {{ .Values.vllm.resources.limits.memory }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 10
+      volumes:
+        - name: hf-cache
+          emptyDir: {}

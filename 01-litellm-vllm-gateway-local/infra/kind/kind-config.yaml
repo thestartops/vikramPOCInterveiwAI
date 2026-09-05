@@ -1,0 +1,18 @@
+# Kind cluster definition for the LiteLLM gateway POC.
+# Lives under infra/ because it's cluster bootstrap, not application config -
+# in a real repo, infra/ would also hold things like Terraform for a managed
+# cluster (DOKS/EKS), CNI/ingress-controller install manifests, etc.
+#
+# Usage: kind create cluster --config infra/kind/kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: llm-gateway
+nodes:
+  - role: control-plane
+  - role: worker
+    extraPortMappings:
+      # host:8080 -> node:30080 -> Service (NodePort 30080) -> LiteLLM pod:4000
+      # Lets you curl localhost:8080 from the laptop without kubectl port-forward.
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

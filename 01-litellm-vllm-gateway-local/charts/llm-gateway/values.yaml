@@ -1,0 +1,49 @@
+# Default values - the environment-agnostic baseline. Think of this as "what
+# a reasonably-sized production namespace looks like". Per-environment files
+# (values-local-kind.yaml, later values-staging.yaml/values-prod.yaml) only
+# override what actually differs for that environment.
+
+namespace: llm-gateway
+
+resourceQuota:
+  requestsCpu: "4"
+  requestsMemory: 8Gi
+  limitsCpu: "6"
+  limitsMemory: 10Gi
+  pods: "10"
+
+limitRange:
+  defaultRequestCpu: 250m
+  defaultRequestMemory: 256Mi
+  defaultLimitCpu: 500m
+  defaultLimitMemory: 512Mi
+
+# Placeholders only - never put real key material here, this file is meant
+# to be committed. Real values come from values-secrets.yaml (gitignored),
+# passed at install time with -f. See values-secrets.example.yaml.
+secrets:
+  vllmApiKey: ""
+  azure:
+    apiKey: ""
+    apiBase: ""
+    apiVersion: ""
+
+vllm:
+  image: vllm/vllm-openai:latest
+  model: Qwen/Qwen2.5-0.5B-Instruct
+  replicas: 1
+  port: 8000
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+# Coming in later steps - left here so the shape of the full chart is visible:
+# litellm:
+#   image: ghcr.io/berriai/litellm:main-latest
+#   replicas: 1
+#   service:
+#     nodePort: 30080

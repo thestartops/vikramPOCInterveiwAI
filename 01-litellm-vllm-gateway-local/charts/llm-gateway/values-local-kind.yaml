@@ -1,0 +1,14 @@
+# Environment override for the local Kind cluster. Only lists what actually
+# differs from values.yaml's defaults - everything else is inherited.
+#
+# Usage: helm install llm-gateway ./charts/llm-gateway \
+#          -f charts/llm-gateway/values.yaml \
+#          -f charts/llm-gateway/values-local-kind.yaml
+# (Helm merges left-to-right, later files win on conflicting keys.)
+
+resourceQuota:
+  requestsCpu: "2"
+  requestsMemory: 4Gi
+  limitsCpu: "3"
+  limitsMemory: 6Gi
+  pods: "6"
